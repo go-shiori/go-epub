@@ -12,8 +12,6 @@
 - Adds an additional EPUB 2.0 table of contents ([as seen here](https://github.com/bmaupin/epub-samples)) for maximum compatibility
 - Includes support for adding CSS, images, and fonts
 
-For an example of actual usage, see https://github.com/bmaupin/go-docs-epub
-
 ### Contributions
 
 Contributions are welcome; please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
