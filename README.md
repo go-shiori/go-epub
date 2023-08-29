@@ -9,7 +9,7 @@
 ### Features
 - [Documented API](https://godoc.org/github.com/go-shiori/go-epub)
 - Creates valid EPUB 3.0 files
-- Adds an additional EPUB 2.0 table of contents ([as seen here](https://github.com/bmaupin/epub-samples)) for maximum compatibility
+- Adds an additional EPUB 2.0 table of contents for maximum compatibility
 - Includes support for adding CSS, images, and fonts
 
 ### Contributions
