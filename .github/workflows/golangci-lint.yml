@@ -1,0 +1,11 @@
+name :"golangci-lint"
+
+on:
+  pull_request:
+    branches: [ main ]
+
+- name: golangci-lint
+  uses: golangci/golangci-lint-action@v3.7.0
+  with:
+    go-version: '1.20'
+
