@@ -1,4 +1,26 @@
 # Source: https://github.com/actions/starter-workflows/blob/main/ci/go.yml
+name : "golangci-lint"
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  golangci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3.7.0
+        with:
+          version: latest
 
 name: CI
 
