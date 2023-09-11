@@ -811,7 +811,10 @@ func TestSetCover(t *testing.T) {
 
 	testImagePath, _ := e.AddImage(testImageFromFileSource, testImageFromFileFilename)
 	testCSSPath, _ := e.AddCSS(testCoverCSSSource, testCoverCSSFilename)
-	e.SetCover(testImagePath, testCSSPath)
+	err = e.SetCover(testImagePath, testCSSPath)
+	if err != nil {
+		t.Error(err)
+	}
 
 	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
 
@@ -1049,7 +1052,11 @@ func testEpubValidity(t testing.TB) {
 	e.AddVideo(testVideoFromURLSource, testVideoFromFileFilename)
 	e.AddAudio(testAudioFromURLSource, testAudioFromFileFilename)
 	e.SetAuthor(testEpubAuthor)
-	e.SetCover(testImagePath, "")
+	err = e.SetCover(testImagePath, "")
+	if err != nil {
+		t.Error(err)
+	}
+
 	e.SetDescription(testEpubDescription)
 	e.SetIdentifier(testEpubIdentifier)
 	e.SetLang(testEpubLang)

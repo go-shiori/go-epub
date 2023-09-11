@@ -181,11 +181,17 @@ func ExampleEpub_SetCover() {
 
 	// Set the cover. The CSS file is optional
 	coverImagePath, _ := e.AddImage("testdata/gophercolor16x16.png", "cover.png")
-	e.SetCover(coverImagePath, "")
+	err = e.SetCover(coverImagePath, "")
+	if err != nil {
+		t.Error(err)
+	}
 
 	// Update the cover using custom CSS
 	coverCSSPath, _ := e.AddCSS("testdata/cover.css", "")
-	e.SetCover(coverImagePath, coverCSSPath)
+	err = e.SetCover(coverImagePath, coverCSSPath)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func ExampleEpub_SetIdentifier() {
