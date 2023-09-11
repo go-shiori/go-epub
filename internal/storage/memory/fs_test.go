@@ -48,13 +48,16 @@ func TestMemory_WriteFile(t *testing.T) {
 func TestMemory_Create(t *testing.T) {
 	fs := NewMemory()
 
-	fs.Create("test")
+	_, err := fs.Create("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	file, _ := fs.Open("test")
 	stat, _ := file.Stat()
 	if !stat.Mode().IsRegular() {
 		t.Fail()
 	}
-	_, err := fs.Create("./..")
+	_, err = fs.Create("./..")
 	if err == nil {
 		t.Fail()
 	}
