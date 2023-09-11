@@ -809,7 +809,11 @@ func TestSetCover(t *testing.T) {
 		t.Error(err)
 	}
 
-	testImagePath, _ := e.AddImage(testImageFromFileSource, testImageFromFileFilename)
+	testImagePath, err := e.AddImage(testImageFromFileSource, testImageFromFileFilename)
+	if err != nil {
+		t.Error(err)
+	}
+
 	testCSSPath, _ := e.AddCSS(testCoverCSSSource, testCoverCSSFilename)
 	err = e.SetCover(testImagePath, testCSSPath)
 	if err != nil {
@@ -857,12 +861,27 @@ func TestManifestItems(t *testing.T) {
 		t.Error(err)
 	}
 
-	e.AddImage(testImageFromFileSource, testImageFromFileFilename)
-	e.AddImage(testImageFromFileSource, "")
+	_, err = e.AddImage(testImageFromFileSource, testImageFromFileFilename)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = e.AddImage(testImageFromFileSource, "")
+	if err != nil {
+		t.Error(err)
+	}
 	// In particular, we want to test these next two, which will be modified by fixXMLId()
-	e.AddImage(testImageFromFileSource, testNumberFilenameStart)
-	e.AddImage(testImageFromFileSource, testSpaceInFilename)
-	e.AddImage(testImageFromURLSource, "")
+	_, err = e.AddImage(testImageFromFileSource, testNumberFilenameStart)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = e.AddImage(testImageFromFileSource, testSpaceInFilename)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = e.AddImage(testImageFromURLSource, "")
+	if err != nil {
+		t.Error(err)
+	}
 
 	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
 
