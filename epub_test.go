@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -318,7 +317,7 @@ func TestAddImage(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error response from test image URL: %s", err)
 	}
-	testImageContents, err = ioutil.ReadAll(resp.Body)
+	testImageContents, err = io.ReadAll(resp.Body)
 	if err != nil {
 		t.Errorf("Unexpected error reading test image file from URL: %s", err)
 	}
@@ -380,7 +379,7 @@ func TestAddVideo(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error response from test video URL: %s", err)
 	}
-	testVideoContents, err = ioutil.ReadAll(resp.Body)
+	testVideoContents, err = io.ReadAll(resp.Body)
 	if err != nil {
 		t.Errorf("Unexpected error reading test video file from URL: %s", err)
 	}
@@ -441,7 +440,7 @@ func TestAddAudio(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error response from test audio URL: %s", err)
 	}
-	testAudioContents, err = ioutil.ReadAll(resp.Body)
+	testAudioContents, err = io.ReadAll(resp.Body)
 	if err != nil {
 		t.Errorf("Unexpected error reading test audio file from URL: %s", err)
 	}
@@ -1199,7 +1198,7 @@ func validateEpub(t testing.TB, epubFilename string) ([]byte, error) {
 		t.Error("Error getting working directory")
 	}
 
-	items, err := ioutil.ReadDir(cwd)
+	items, err := os.ReadDir(cwd)
 	if err != nil {
 		t.Error("Error getting contents of working directory")
 	}
@@ -1211,7 +1210,7 @@ func validateEpub(t testing.TB, epubFilename string) ([]byte, error) {
 			break
 
 		} else if strings.HasPrefix(i.Name(), testEpubcheckPrefix) {
-			if i.Mode().IsDir() {
+			if i.IsDir() {
 				pathToEpubcheck = filepath.Join(i.Name(), testEpubcheckJarfile)
 				if _, err := os.Stat(pathToEpubcheck); err == nil {
 					break
