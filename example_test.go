@@ -34,7 +34,11 @@ func ExampleEpub_AddCSS() {
 	// Use the CSS in a section
 	sectionBody := `    <h1>Section 1</h1>
 	<p>This is a paragraph.</p>`
-	e.AddSection(sectionBody, "Section 1", "", css1Path)
+	_, err = e.AddSection(sectionBody, "Section 1", "", css1Path)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	fmt.Println(css1Path)
 	fmt.Println(css2Path)
