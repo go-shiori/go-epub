@@ -72,7 +72,11 @@ func testWriteToErrors(t *testing.T, e *Epub, adder func(string, string) (string
 	if err != nil {
 		t.Fatalf("unable to create temp file: %v", err)
 	}
-	io.Copy(temp, data)
+	_, err = io.Copy(temp, data)
+	if err != nil {
+		t.Fatalf("unable to copy tmp file to destination: %v", err)
+	}
+
 	temp.Close()
 	// Add temp file to epub
 	if _, err := adder(temp.Name(), ""); err != nil {
