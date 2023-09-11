@@ -33,13 +33,16 @@ func TestMemory_Mkdir(t *testing.T) {
 func TestMemory_WriteFile(t *testing.T) {
 	fs := NewMemory()
 
-	fs.WriteFile("test", []byte{}, 0666)
+	err := fs.WriteFile("test", []byte{}, 0666)
+	if err != nil {
+		t.Fail()
+	}
 	file, _ := fs.Open("test")
 	stat, _ := file.Stat()
 	if !stat.Mode().IsRegular() {
 		t.Fail()
 	}
-	err := fs.WriteFile("./..", []byte{}, 0666)
+	err = fs.WriteFile("./..", []byte{}, 0666)
 	if err == nil {
 		t.Fail()
 	}
