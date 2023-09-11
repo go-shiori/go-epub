@@ -1055,22 +1055,59 @@ func testEpubValidity(t testing.TB) {
 	}
 
 	testCoverCSSPath, _ := e.AddCSS(testCoverCSSSource, testCoverCSSFilename)
-	e.AddCSS(testCoverCSSSource, "")
-	testSectionPath, _ := e.AddSection(testSectionBody, testSectionTitle, testSectionFilename, testCoverCSSPath)
-	e.AddSubSection(testSectionPath, testSectionBody, "Test subsection", "subsection.xhtml", "")
+	_, err = e.AddCSS(testCoverCSSSource, "")
+	if err != nil {
+		t.Error(err)
+	}
 
-	e.AddFont(testFontFromFileSource, "")
+	testSectionPath, err := e.AddSection(testSectionBody, testSectionTitle, testSectionFilename, testCoverCSSPath)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = e.AddSubSection(testSectionPath, testSectionBody, "Test subsection", "subsection.xhtml", "")
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = e.AddFont(testFontFromFileSource, "")
+	if err != nil {
+		t.Error(err)
+	}
 	// Add CSS referencing the font in order to validate the font MIME type
-	testFontCSSPath, _ := e.AddCSS(testFontCSSSource, testFontCSSFilename)
+	testFontCSSPath, err := e.AddCSS(testFontCSSSource, testFontCSSFilename)
+	if err != nil {
+		t.Error(err)
+	}
 
-	e.AddSection(testSectionBody, testSectionTitle, "", testFontCSSPath)
+	_, err = e.AddSection(testSectionBody, testSectionTitle, "", testFontCSSPath)
+	if err != nil {
+		t.Error(err)
+	}
 
-	testImagePath, _ := e.AddImage(testImageFromFileSource, testImageFromFileFilename)
-	e.AddImage(testImageFromFileSource, testImageFromFileFilename)
-	e.AddImage(testImageFromURLSource, "")
-	e.AddImage(testImageFromFileSource, testNumberFilenameStart)
-	e.AddVideo(testVideoFromURLSource, testVideoFromFileFilename)
-	e.AddAudio(testAudioFromURLSource, testAudioFromFileFilename)
+	testImagePath, err := e.AddImage(testImageFromFileSource, testImageFromFileFilename)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = e.AddImage(testImageFromFileSource, testImageFromFileFilename)
+	if err == nil {
+		t.Error(err)
+	}
+	_, err = e.AddImage(testImageFromURLSource, "")
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = e.AddImage(testImageFromFileSource, testNumberFilenameStart)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = e.AddVideo(testVideoFromURLSource, testVideoFromFileFilename)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = e.AddAudio(testAudioFromURLSource, testAudioFromFileFilename)
+	if err != nil {
+		t.Error(err)
+	}
 	e.SetAuthor(testEpubAuthor)
 	err = e.SetCover(testImagePath, "")
 	if err != nil {
