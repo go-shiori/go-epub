@@ -1109,13 +1109,19 @@ func testEpubValidity(t testing.TB) {
 
 func BenchmarkEpubValidity(b *testing.B) {
 	b.Run("LocalFS", func(b *testing.B) {
-		Use(OsFS)
+		err := Use(OsFS)
+		if err != nil {
+			b.Error(err)
+		}
 		for i := 0; i < b.N; i++ {
 			testEpubValidity(b)
 		}
 	})
 	b.Run("MemoryFS", func(b *testing.B) {
-		Use(MemoryFS)
+		err := Use(MemoryFS)
+		if err != nil {
+			b.Error(err)
+		}
 		for i := 0; i < b.N; i++ {
 			testEpubValidity(b)
 		}
@@ -1125,11 +1131,17 @@ func BenchmarkEpubValidity(b *testing.B) {
 
 func TestEpubValidity(t *testing.T) {
 	t.Run("LocalFS", func(t *testing.T) {
-		Use(OsFS)
+		err := Use(OsFS)
+		if err != nil {
+			t.Error(err)
+		}
 		testEpubValidity(t)
 	})
 	t.Run("MemoryFS", func(t *testing.T) {
-		Use(MemoryFS)
+		err := Use(MemoryFS)
+		if err != nil {
+			t.Error(err)
+		}
 		testEpubValidity(t)
 	})
 }

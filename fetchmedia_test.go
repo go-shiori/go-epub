@@ -36,11 +36,17 @@ AAAAAAAAAAAAAA==`, "\n", "", -1)
 
 func Test_fetchMedia(t *testing.T) {
 	t.Run("LocalFS", func(t *testing.T) {
-		Use(OsFS)
+		err := Use(OsFS)
+		if err != nil {
+			t.Error(err)
+		}
 		testFetchMedia(t)
 	})
 	t.Run("MemoryFS", func(t *testing.T) {
-		Use(MemoryFS)
+		err := Use(MemoryFS)
+		if err != nil {
+			t.Error(err)
+		}
 		testFetchMedia(t)
 	})
 }
