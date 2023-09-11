@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -1097,7 +1098,11 @@ func testEpubValidity(t testing.TB) {
 		cleanup(testEpubFilename, tempDir)
 	} else {
 		// Always remove the files in tempDir; they can still be extracted from the test epub as needed
-		filesystem.RemoveAll(tempDir)
+		err := filesystem.RemoveAll(tempDir)
+		if err != nil {
+			log.Print("Error removing temp directory: %w", err)
+		}
+
 	}
 
 }
@@ -1131,7 +1136,10 @@ func TestEpubValidity(t *testing.T) {
 
 func cleanup(epubFilename string, tempDir string) {
 	os.Remove(epubFilename)
-	filesystem.RemoveAll(tempDir)
+	err := filesystem.RemoveAll(tempDir)
+	if err != nil {
+		log.Print("Error removing temp directory: %w", err)
+	}
 }
 
 // TrimAllSpace trims all space from each line of the string and removes empty
