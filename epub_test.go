@@ -263,7 +263,7 @@ func TestAddFont(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error reading testdata font file: %s", err)
 	}
-	if bytes.Compare(contents, testFontContents) != 0 {
+	if !bytes.Equal(contents, testFontContents) {
 		t.Errorf("Font file contents don't match")
 	}
 
@@ -305,7 +305,7 @@ func TestAddImage(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error reading testdata image file: %s", err)
 	}
-	if bytes.Compare(contents, testImageContents) != 0 {
+	if !bytes.Equal(contents, testImageContents) {
 		t.Errorf("Image file contents don't match")
 	}
 
@@ -322,7 +322,7 @@ func TestAddImage(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error reading test image file from URL: %s", err)
 	}
-	if bytes.Compare(contents, testImageContents) != 0 {
+	if !bytes.Equal(contents, testImageContents) {
 		t.Errorf("Image file contents don't match")
 	}
 
@@ -367,7 +367,7 @@ func TestAddVideo(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error reading testdata video file: %s", err)
 	}
-	if bytes.Compare(contents, testVideoContents) != 0 {
+	if !bytes.Equal(contents, testVideoContents) {
 		t.Errorf("Video file contents don't match")
 	}
 
@@ -384,7 +384,7 @@ func TestAddVideo(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error reading test video file from URL: %s", err)
 	}
-	if bytes.Compare(contents, testVideoContents) != 0 {
+	if !bytes.Equal(contents, testVideoContents) {
 		t.Errorf("Video file contents don't match")
 	}
 
@@ -428,7 +428,7 @@ func TestAddAudio(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error reading testdata audio file: %s", err)
 	}
-	if bytes.Compare(contents, testAudioContents) != 0 {
+	if !bytes.Equal(contents, testAudioContents) {
 		t.Errorf("Audio file contents don't match")
 	}
 
@@ -445,7 +445,7 @@ func TestAddAudio(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error reading test audio file from URL: %s", err)
 	}
-	if bytes.Compare(contents, testAudioContents) != 0 {
+	if !bytes.Equal(contents, testAudioContents) {
 		t.Errorf("Audio file contents don't match")
 	}
 
