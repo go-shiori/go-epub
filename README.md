@@ -4,9 +4,6 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/bmaupin/go-epub/blob/master/LICENSE)
 [![GoDoc](https://godoc.org/github.com/bmaupin/go-epub?status.svg)](https://godoc.org/github.com/bmaupin/go-epub)
 
----
-
-⚠️ This project is unmaintained. Please use [go-shiori/go-epub](https://github.com/go-shiori/go-epub) or [another fork](https://github.com/bmaupin/go-epub/forks).
 
 ### Features
 - [Documented API](https://godoc.org/github.com/bmaupin/go-epub)
