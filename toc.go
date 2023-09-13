@@ -234,10 +234,6 @@ func (t *toc) setTitle(title string) {
 	t.title = title
 }
 
-func (t *toc) setAuthor(author string) {
-	t.author = author
-}
-
 // Write the TOC files
 func (t *toc) write(tempDir string) error {
 	err := t.writeNavDoc(tempDir)
