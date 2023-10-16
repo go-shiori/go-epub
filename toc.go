@@ -214,7 +214,7 @@ func (t *toc) addSubSection(parent string, index int, title string, relativePath
 		},
 		Children: nil,
 	}
-	if parentNcxIndex > len(t.ncxXML.NavMap) {
+	if len(t.ncxXML.NavMap) > parentNcxIndex {
 		if t.ncxXML.NavMap[parentNcxIndex].Children == nil {
 			n := make([]tocNcxNavPoint, 0)
 			t.ncxXML.NavMap[parentNcxIndex].Children = &n
