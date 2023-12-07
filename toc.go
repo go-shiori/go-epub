@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"regexp"
 	"strconv"
 )
 
@@ -228,7 +229,14 @@ func (t *toc) writeNavDoc(tempDir string) error {
 		return fmt.Errorf("Error marshalling XML for EPUB v3 TOC file: %w\n"+"\tXML=%#v", err, t.navXML)
 	}
 
-	n, err := newXhtml(string(navBodyContent))
+	// subsection without children itself left an empty tag <ol></ol>
+	// that not acceptable for epub v3
+	// this regex will remove those line from tocnav.
+	// TODO: find a better solution
+	re := regexp.MustCompile(`\s*<ol>\s*</ol>`)
+	bodyWithoutEmptyTags := re.ReplaceAllString(string(navBodyContent), "")
+
+	n, err := newXhtml(bodyWithoutEmptyTags)
 	if err != nil {
 		return fmt.Errorf("can't create xhtml for TOC file: %w", err)
 	}
