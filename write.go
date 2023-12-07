@@ -510,7 +510,10 @@ func writeSections(rootEpubDir string, e *Epub, sections []epubSection, parentfi
 			e.toc.addSubSection(parentfilenameis, j, section.xhtml.Title(), relativePath)
 		}
 		if section.children != nil {
-			writeSections(rootEpubDir, e, section.children, parentfilename, filenamelist)
+			err = writeSections(rootEpubDir, e, section.children, parentfilename, filenamelist)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 
