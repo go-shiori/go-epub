@@ -431,7 +431,10 @@ func (e *Epub) writeSections(rootEpubDir string) {
 		if e.cover.xhtmlFilename != "" {
 			e.pkg.addToSpine(e.cover.xhtmlFilename)
 		}
-		writeSections(rootEpubDir, e, e.sections, parentlis, filenamelist)
+		err := writeSections(rootEpubDir, e, e.sections, parentlis, filenamelist)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 

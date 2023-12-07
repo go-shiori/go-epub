@@ -3,6 +3,7 @@ package epub
 import (
 	"encoding/xml"
 	"fmt"
+	"log"
 	"path/filepath"
 	"strconv"
 )
@@ -188,8 +189,14 @@ func (t *toc) addSubSection(parent string, index int, title string, relativePath
 			},
 			Children: nil,
 		}
-		navAppender(t, parentRelativePath, l)
-		ncxAppender(t, parentRelativePath, *np)
+		err := navAppender(t, parentRelativePath, l)
+		if err != nil {
+			log.Println(err)
+		}
+		err = ncxAppender(t, parentRelativePath, *np)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
