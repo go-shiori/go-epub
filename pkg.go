@@ -180,6 +180,7 @@ func (p *pkg) setAuthor(author string) {
 
 // Add an EPUB 2 cover meta element for backward compatibility (http://idpf.org/forum/topic-715)
 func (p *pkg) setCover(coverRef string) {
+	coverRef, _ = fixXMLId(coverRef)
 	p.coverMeta = &pkgMeta{
 		Name:    "cover",
 		Content: coverRef,

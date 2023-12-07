@@ -431,8 +431,7 @@ func (e *Epub) writeSections(rootEpubDir string) {
 		if e.cover.xhtmlFilename != "" {
 			e.pkg.addToSpine(e.cover.xhtmlFilename)
 		}
-		//TODO: handle cover to write correctly
-		writesections(rootEpubDir, e, e.sections, parentlis, filenamelist)
+		writeSections(rootEpubDir, e, e.sections, parentlis, filenamelist)
 	}
 }
 
@@ -479,27 +478,36 @@ func getParentHelper(s []epubSection, rootfilename string) map[string]string {
 	return fileparent
 }
 
-func writesections(rootEpubDir string, e *Epub, sections []epubSection, parentfilename map[string]string, filenamelist map[string]int) error {
+func writeSections(rootEpubDir string, e *Epub, sections []epubSection, parentfilename map[string]string, filenamelist map[string]int) error {
 	for _, section := range sections {
-		e.pkg.addToSpine(section.filename)
+
+		// Set the title of the cover page XHTML to the title of the EPUB
+		if section.filename == e.cover.xhtmlFilename {
+			section.xhtml.setTitle(e.Title())
+		}
 
 		sectionFilePath := filepath.Join(rootEpubDir, contentFolderName, xhtmlFolderName, section.filename)
 		err := section.xhtml.write(sectionFilePath)
 		if err != nil {
 			log.Println(err)
 		}
+
 		relativePath := filepath.Join(xhtmlFolderName, section.filename)
+		if section.filename != e.cover.xhtmlFilename {
+			e.pkg.addToSpine(section.filename)
+		}
 		e.pkg.addToManifest(section.filename, relativePath, mediaTypeXhtml, "")
-		if parentfilename[section.filename] == "-1" {
+		if parentfilename[section.filename] == "-1" && section.filename != e.cover.xhtmlFilename {
 			j := filenamelist[section.filename]
 			e.toc.addSubSection("-1", j, section.xhtml.Title(), relativePath)
-		} else {
+		}
+		if parentfilename[section.filename] != "-1" && section.filename != e.cover.xhtmlFilename {
 			j := filenamelist[section.filename]
 			parentfilenameis := parentfilename[section.filename]
 			e.toc.addSubSection(parentfilenameis, j, section.xhtml.Title(), relativePath)
 		}
 		if section.children != nil {
-			writesections(rootEpubDir, e, section.children, parentfilename, filenamelist)
+			writeSections(rootEpubDir, e, section.children, parentfilename, filenamelist)
 		}
 	}
 
