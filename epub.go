@@ -385,10 +385,9 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 		e.sections = append(e.sections, s)
 	} else {
 		// find parent section and append subsection to that
-		sectionAppender(e.sections, parentFilename, s)
-
+		err := sectionAppender(e.sections, parentFilename, s)
 		if err != nil {
-			log.Println("i can't append subsection", err)
+			return "", err
 		}
 	}
 
