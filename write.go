@@ -424,14 +424,14 @@ func (e *Epub) writePackageFile(rootEpubDir string) {
 // the TOC and package files
 func (e *Epub) writeSections(rootEpubDir string) {
 	filenamelist := getFilenames(e.sections)
-	parentlis := getParent(e.sections)
+	parentlist := getParents(e.sections, "-1")
 	if len(e.sections) > 0 {
 		// If a cover was set, add it to the package spine first so it shows up
 		// first in the reading order
 		if e.cover.xhtmlFilename != "" {
 			e.pkg.addToSpine(e.cover.xhtmlFilename)
 		}
-		err := writeSections(rootEpubDir, e, e.sections, parentlis, filenamelist)
+		err := writeSections(rootEpubDir, e, e.sections, parentlist, filenamelist)
 		if err != nil {
 			log.Println(err)
 		}
@@ -451,37 +451,23 @@ func (e *Epub) writeToc(rootEpubDir string) {
 
 }
 
-// get sections and return list of each section filename and parent filename
-func getParent(sections []epubSection) map[string]string {
+// Create a list of sections and their parents.
+// -1 means that sections are appended to the root (have no parents), like section and cover.
+func getParents(sections []*epubSection, root string) map[string]string {
 	fileparent := make(map[string]string)
-
-	for j, section := range sections {
-		pfi := getParentHelper(section.children, section.filename)
-		pfi[sections[j].filename] = "-1"
-		for key, value := range pfi {
-			fileparent[key] = value
-		}
-	}
-
-	return fileparent
-}
-
-// break memory overflow
-func getParentHelper(s []epubSection, rootfilename string) map[string]string {
-	fileparent := make(map[string]string)
-	for _, child := range s {
-		fileparent[child.filename] = rootfilename
-		if child.children != nil {
-			childFileParent := getParentHelper(child.children, child.filename)
-			for k, v := range childFileParent {
-				fileparent[k] = v
+	for _, section := range sections {
+		fileparent[section.filename] = root
+		if section.children != nil {
+			childFileparent := getParents(section.children, section.filename)
+			for filename, parent := range childFileparent {
+				fileparent[filename] = parent
 			}
 		}
 	}
 	return fileparent
 }
 
-func writeSections(rootEpubDir string, e *Epub, sections []epubSection, parentfilename map[string]string, filenamelist map[string]int) error {
+func writeSections(rootEpubDir string, e *Epub, sections []*epubSection, parentfilename map[string]string, filenamelist map[string]int) error {
 	for _, section := range sections {
 
 		// Set the title of the cover page XHTML to the title of the EPUB

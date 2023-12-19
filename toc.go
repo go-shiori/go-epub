@@ -62,15 +62,15 @@ type toc struct {
 }
 
 type tocNavBody struct {
-	XMLName  xml.Name     `xml:"nav"`
-	EpubType string       `xml:"epub:type,attr"`
-	H1       string       `xml:"h1"`
-	Links    []tocNavItem `xml:"ol>li"`
+	XMLName  xml.Name      `xml:"nav"`
+	EpubType string        `xml:"epub:type,attr"`
+	H1       string        `xml:"h1"`
+	Links    []*tocNavItem `xml:"ol>li"`
 }
 
 type tocNavItem struct {
-	A        tocNavLink   `xml:"a"`
-	Children []tocNavItem `xml:"ol>li,omitempty"`
+	A        tocNavLink    `xml:"a"`
+	Children []*tocNavItem `xml:"ol>li,omitempty"`
 }
 
 type tocNavLink struct {
@@ -80,12 +80,12 @@ type tocNavLink struct {
 }
 
 type tocNcxRoot struct {
-	XMLName xml.Name         `xml:"http://www.daisy.org/z3986/2005/ncx/ ncx"`
-	Version string           `xml:"version,attr"`
-	Meta    tocNcxMeta       `xml:"head>meta"`
-	Title   string           `xml:"docTitle>text"`
-	Author  string           `xml:"docAuthor>text"`
-	NavMap  []tocNcxNavPoint `xml:"navMap>navPoint"`
+	XMLName xml.Name          `xml:"http://www.daisy.org/z3986/2005/ncx/ ncx"`
+	Version string            `xml:"version,attr"`
+	Meta    tocNcxMeta        `xml:"head>meta"`
+	Title   string            `xml:"docTitle>text"`
+	Author  string            `xml:"docAuthor>text"`
+	NavMap  []*tocNcxNavPoint `xml:"navMap>navPoint"`
 }
 
 type tocNcxContent struct {
@@ -98,11 +98,11 @@ type tocNcxMeta struct {
 }
 
 type tocNcxNavPoint struct {
-	XMLName  xml.Name         `xml:"navPoint"`
-	ID       string           `xml:"id,attr"`
-	Text     string           `xml:"navLabel>text"`
-	Content  tocNcxContent    `xml:"content"`
-	Children []tocNcxNavPoint `xml:"navPoint,omitempty"`
+	XMLName  xml.Name          `xml:"navPoint"`
+	ID       string            `xml:"id,attr"`
+	Text     string            `xml:"navLabel>text"`
+	Content  tocNcxContent     `xml:"content"`
+	Children []*tocNcxNavPoint `xml:"navPoint,omitempty"`
 }
 
 // Constructor for toc
@@ -170,13 +170,13 @@ func (t *toc) addSubSection(parent string, index int, title string, relativePath
 			},
 			Children: nil,
 		}
-		t.navXML.Links = append(t.navXML.Links, *l)
-		t.ncxXML.NavMap = append(t.ncxXML.NavMap, *np)
+		t.navXML.Links = append(t.navXML.Links, l)
+		t.ncxXML.NavMap = append(t.ncxXML.NavMap, np)
 	} else {
 
 		parentRelativePath := filepath.Join(xhtmlFolderName, parent)
 
-		l := tocNavItem{
+		l := &tocNavItem{
 			A: tocNavLink{
 				Href: relativePath,
 				Data: title,
@@ -190,11 +190,11 @@ func (t *toc) addSubSection(parent string, index int, title string, relativePath
 			},
 			Children: nil,
 		}
-		err := navAppender(t, parentRelativePath, l)
+		err := navAppender(t.navXML.Links, parentRelativePath, l)
 		if err != nil {
 			log.Println(err)
 		}
-		err = ncxAppender(t, parentRelativePath, *np)
+		err = ncxAppender(t.ncxXML.NavMap, parentRelativePath, np)
 		if err != nil {
 			log.Println(err)
 		}
@@ -273,17 +273,17 @@ func (t *toc) writeNcxDoc(tempDir string) error {
 	return nil
 }
 
-// append tocNcxNavPoint to the parrent Children
-func ncxAppender(t *toc, parentFilename string, targetsection tocNcxNavPoint) error {
+// Append tocNcxNavPoint to parent children for toc in Epub v2
+func ncxAppender(t []*tocNcxNavPoint, parentFilename string, targetsection *tocNcxNavPoint) error {
 	// Search for the epubSection with filename equal to parentFilename
-	for i := range t.ncxXML.NavMap {
-		if t.ncxXML.NavMap[i].Content.Src == parentFilename {
+	for _, ncx := range t {
+		if ncx.Content.Src == parentFilename {
 			// Append targetsection as children of the found section
-			t.ncxXML.NavMap[i].Children = append(t.ncxXML.NavMap[i].Children, targetsection)
+			ncx.Children = append(ncx.Children, targetsection)
 			return nil
 		}
 		// Recursively check all children of the current section
-		err := ncxAppenderHelper(t.ncxXML.NavMap[i], parentFilename, targetsection)
+		err := ncxAppender(ncx.Children, parentFilename, targetsection)
 		if err == nil {
 			return nil
 		}
@@ -291,55 +291,17 @@ func ncxAppender(t *toc, parentFilename string, targetsection tocNcxNavPoint) er
 	return fmt.Errorf("parent section not found")
 }
 
-// break memory overflow
-// search nested children
-func ncxAppenderHelper(section tocNcxNavPoint, parentFilename string, targetsection tocNcxNavPoint) error {
+// Append tocNavItem to parent children for toc in Epub v3
+func navAppender(t []*tocNavItem, parentFilename string, targetsection *tocNavItem) error {
 	// Search for the epubSection with filename equal to parentFilename
-	for i := range section.Children {
-		if section.Children[i].Content.Src == parentFilename {
+	for _, nav := range t {
+		if nav.A.Href == parentFilename {
 			// Append targetsection as children of the found section
-			section.Children[i].Children = append(section.Children[i].Children, targetsection)
+			nav.Children = append(nav.Children, targetsection)
 			return nil
 		}
 		// Recursively check all children of the current section
-		err := ncxAppenderHelper(section.Children[i], parentFilename, targetsection)
-		if err == nil {
-			return nil
-		}
-	}
-	return fmt.Errorf("parent section not found")
-}
-
-// append tocNavItem to the parrent Children toc v3
-func navAppender(t *toc, parentFilename string, targetsection tocNavItem) error {
-	// Search for the epubSection with filename equal to parentFilename
-	for i := range t.navXML.Links {
-		if t.navXML.Links[i].A.Href == parentFilename {
-			// Append targetsection as children of the found section
-			t.navXML.Links[i].Children = append(t.navXML.Links[i].Children, targetsection)
-			return nil
-		}
-		// Recursively check all children of the current section
-		err := navAppenderHelper(t.navXML.Links[i], parentFilename, targetsection)
-		if err == nil {
-			return nil
-		}
-	}
-	return fmt.Errorf("parent section not found")
-}
-
-// break memory overflow
-// search nested children in toc version 3
-func navAppenderHelper(section tocNavItem, parentFilename string, targetsection tocNavItem) error {
-	// Search for the epubSection with filename equal to parentFilename
-	for i := range section.Children {
-		if section.Children[i].A.Href == parentFilename {
-			// Append targetsection as children of the found section
-			section.Children[i].Children = append(section.Children[i].Children, targetsection)
-			return nil
-		}
-		// Recursively check all children of the current section
-		err := navAppenderHelper(section.Children[i], parentFilename, targetsection)
+		err := navAppender(nav.Children, parentFilename, targetsection)
 		if err == nil {
 			return nil
 		}

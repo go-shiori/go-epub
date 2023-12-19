@@ -140,7 +140,7 @@ type Epub struct {
 	ppd string
 	// The package file (package.opf)
 	pkg      *pkg
-	sections []epubSection
+	sections []*epubSection
 	title    string
 	// Table of contents
 	toc *toc
@@ -156,7 +156,7 @@ type epubCover struct {
 type epubSection struct {
 	filename string
 	xhtml    *xhtml
-	children []epubSection
+	children []*epubSection
 }
 
 // NewEpub returns a new Epub.
@@ -373,7 +373,7 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 		x.setCSS(internalCSSPath)
 	}
 
-	s := epubSection{
+	s := &epubSection{
 		filename: internalFilename,
 		xhtml:    x,
 		children: nil,
@@ -385,7 +385,8 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 		e.sections = append(e.sections, s)
 	} else {
 		// find parent section and append subsection to that
-		err := subsectionAppender(e, parentFilename, s)
+		sectionAppender(e.sections, parentFilename, s)
+
 		if err != nil {
 			log.Println("i can't append subsection", err)
 		}
@@ -650,8 +651,8 @@ func addMedia(client *http.Client, source string, internalFilename string, media
 	), nil
 }
 
-// getFilenames return a map of section filename and index number inside an ebook
-func getFilenames(sections []epubSection) map[string]int {
+// getFilenames returns a map of section filenames and index numbers within an ebook
+func getFilenames(sections []*epubSection) map[string]int {
 	filenames := make(map[string]int)
 	index := 1
 
@@ -677,39 +678,18 @@ func keyExists(m map[string]int, key string) bool {
 	return ok
 }
 
-// this function get *epub, parrentfilenname and section want to append
-// than search *epub to find parrent section and append target section to that
-func subsectionAppender(e *Epub, parentFilename string, targetSection epubSection) error {
-	// Search for the epubSection with filename equal to parentFilename
-	for i := range e.sections {
-		if e.sections[i].filename == parentFilename {
-			// Append targetsection as children of the parent section
-			e.sections[i].children = append(e.sections[i].children, targetSection)
+// Find parent section and append epubSection to it
+func sectionAppender(sections []*epubSection, parentFilename string, targetSection *epubSection) error {
+	for _, section := range sections {
+		if section.filename == parentFilename {
+			section.children = append(section.children, targetSection)
 			return nil
 		}
-		// Recursively check all children of the current section
-		err := subsectionAppenderHelper(e.sections[i], parentFilename, targetSection)
+		err := sectionAppender(section.children, parentFilename, targetSection)
 		if err == nil {
 			return nil
 		}
 	}
-	return fmt.Errorf("parent section not found")
-}
 
-// break memory overflow
-func subsectionAppenderHelper(section epubSection, parentFilename string, targetSection epubSection) error {
-	// Search for the epubSection with filename equal to parentFilename
-	for i := range section.children {
-		if section.children[i].filename == parentFilename {
-			// Append targetsection as children of the found section
-			section.children[i].children = append(section.children[i].children, targetSection)
-			return nil
-		}
-		// Recursively check all children of the current section
-		err := subsectionAppenderHelper(section.children[i], parentFilename, targetSection)
-		if err == nil {
-			return nil
-		}
-	}
 	return fmt.Errorf("parent section not found")
 }
