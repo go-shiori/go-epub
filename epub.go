@@ -333,11 +333,10 @@ func (e *Epub) AddSubSection(parentFilename string, body string, sectionTitle st
 }
 
 func (e *Epub) addSection(parentFilename string, body string, sectionTitle string, internalFilename string, internalCSSPath string) (string, error) {
-	parentIndex := -1
 
 	// get list of all xhtml filename inside of epub
 	filenamelist := getFilenames(e.sections)
-	parentIndex = filenamelist[parentFilename] - 1
+	parentIndex := filenamelist[parentFilename] - 1
 
 	if parentFilename != "" && parentIndex == -1 {
 		return "", &ParentDoesNotExistError{Filename: parentFilename}
