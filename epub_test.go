@@ -517,6 +517,16 @@ func TestAddSubSection(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error adding subsection: %s", err)
 	}
+	// append subsection to a subsection
+	testSubSection2Path, err := e.AddSubSection(testSection2Path, testSectionBody, testSectionTitle, "", "")
+	if err != nil {
+		t.Errorf("Error adding subsection: %s", err)
+	}
+	// append subsection to a parrent that not exist
+	_, err2 := e.AddSubSection("ParentNotExist", testSectionBody, testSectionTitle, "", "")
+	if err2.Error() != "Parent with the internal filename ParentNotExist does not exist" {
+		t.Errorf("Error adding subsection: %s", err)
+	}
 
 	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
 
@@ -536,6 +546,19 @@ func TestAddSubSection(t *testing.T) {
 	}
 
 	contents, err = storage.ReadFile(filesystem, filepath.Join(tempDir, contentFolderName, xhtmlFolderName, testSection2Path))
+	if err != nil {
+		t.Errorf("Unexpected error reading section file: %s", err)
+	}
+
+	if trimAllSpace(string(contents)) != trimAllSpace(testSectionContents) {
+		t.Errorf(
+			"Section file contents don't match\n"+
+				"Got: %s\n"+
+				"Expected: %s",
+			contents,
+			testSectionContents)
+	}
+	contents, err = storage.ReadFile(filesystem, filepath.Join(tempDir, contentFolderName, xhtmlFolderName, testSubSection2Path))
 	if err != nil {
 		t.Errorf("Unexpected error reading section file: %s", err)
 	}
@@ -820,6 +843,10 @@ func TestSetCover(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	err = e.SetCover(testImagePath, testCSSPath)
+	if err != nil {
+		t.Error(err)
+	}
 
 	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
 
@@ -839,6 +866,22 @@ func TestSetCover(t *testing.T) {
 	}
 
 	cleanup(testEpubFilename, tempDir)
+}
+
+func TestSectionAppender(t *testing.T) {
+	sections := []*epubSection{
+		// Define your sections here
+	}
+
+	parentFilename := "parent.html"
+	targetSection := &epubSection{
+		// Define your target section here
+	}
+
+	err := sectionAppender(sections, parentFilename, targetSection)
+	if err.Error() != "parent section not found" {
+		t.Errorf("Error adding subsection: %s", err)
+	}
 }
 
 func TestManifestItems(t *testing.T) {
