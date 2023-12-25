@@ -1385,3 +1385,43 @@ func writeAndExtractEpub(t testing.TB, e *Epub, epubFilename string) string {
 
 	return tempDir
 }
+
+func TestAddSubSection_with_custome_filename(t *testing.T) {
+	e, err := NewEpub(testEpubTitle)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testSection1Path, err := e.AddSection(testSectionBody, testSectionTitle, "firstsection.xhtml", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
+
+	testSection2Path, err := e.AddSubSection(testSection1Path, testSectionBody, testSectionTitle, "", "")
+	if err != nil {
+		t.Errorf("Error adding subsection: %s", err)
+	}
+	// append subsection to a subsection
+	testSection3Path, err := e.AddSubSection(testSection2Path, testSectionBody, testSectionTitle, "someNameWithoutxhtml", "")
+	if err != nil {
+		t.Errorf("Error adding subsection: %s", err)
+	}
+	_, err = e.AddSubSection(testSection2Path, testSectionBody, testSectionTitle, "someNameWithoutxhtml.xhtml", "")
+	if err.Error() != "Filename already used: someNameWithoutxhtml.xhtml" {
+		t.Errorf("you should not add same file twice : %s", err)
+	}
+
+	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
+
+	if testSection1Path != "firstsection.xhtml" {
+		t.Errorf("Expected section1Path to be 'firstsection.xhtml', got '%s'", testSection1Path)
+	}
+	if testSection2Path != "section0001.xhtml" {
+		t.Errorf("Expected section2Path to be 'section0001', got '%s'", testSection2Path)
+	}
+	if testSection3Path != "someNameWithoutxhtml.xhtml" {
+		t.Errorf("Expected section3Path to be 'someNameWithoutxhtml.xhtml', got '%s'", testSection3Path)
+	}
+
+	cleanup(testEpubFilename, tempDir)
+}

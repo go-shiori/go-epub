@@ -342,9 +342,6 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 		return "", &ParentDoesNotExistError{Filename: parentFilename}
 	}
 
-	// TODO: if filename exist with customename it should change that automatically or retrurn error
-	//for example add section with "Batman.xhtml" should be handle
-
 	// Generate a filename if one isn't provided
 	if internalFilename == "" {
 		index := 1
@@ -355,7 +352,12 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 			}
 		}
 	} else {
-		// if internalFilename is not empty check that is not duplicate
+		// if internalFilename is not empty, check that it has .xhtml at the end.
+		// if it doesn't have add .xhtml at the end
+		// than if it is duplicate return error
+		if !strings.HasSuffix(internalFilename, ".xhtml") {
+			internalFilename += ".xhtml"
+		}
 		if keyExists(filenamelist, internalFilename) {
 			return "", &FilenameAlreadyUsedError{Filename: internalFilename}
 		}
