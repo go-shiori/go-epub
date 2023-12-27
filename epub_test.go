@@ -1386,7 +1386,7 @@ func writeAndExtractEpub(t testing.TB, e *Epub, epubFilename string) string {
 	return tempDir
 }
 
-func TestAddSubSection_with_custome_filename(t *testing.T) {
+func TestAddSubSectionWithCustomFilename(t *testing.T) {
 	e, err := NewEpub(testEpubTitle)
 	if err != nil {
 		t.Error(err)
