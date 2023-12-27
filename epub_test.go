@@ -868,7 +868,7 @@ func TestSetCover(t *testing.T) {
 	cleanup(testEpubFilename, tempDir)
 }
 
-func TestSectionAppender(t *testing.T) {
+func TestSectionAppenderParrentNotFound(t *testing.T) {
 	sections := []*epubSection{
 		// Define your sections here
 	}
