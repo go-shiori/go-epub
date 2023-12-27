@@ -522,7 +522,7 @@ func TestAddSubSection(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error adding subsection: %s", err)
 	}
-	// append subsection to a parrent that not exist
+	// Append subsection to a parent that not exist
 	_, err2 := e.AddSubSection("ParentNotExist", testSectionBody, testSectionTitle, "", "")
 	if err2.Error() != "Parent with the internal filename ParentNotExist does not exist" {
 		t.Errorf("Error adding subsection: %s", err)
