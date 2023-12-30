@@ -869,14 +869,10 @@ func TestSetCover(t *testing.T) {
 }
 
 func TestSectionAppenderParrentNotFound(t *testing.T) {
-	sections := []*epubSection{
-		// Define your sections here
-	}
+	sections := []*epubSection{}
 
 	parentFilename := "parent.html"
-	targetSection := &epubSection{
-		// Define your target section here
-	}
+	targetSection := &epubSection{}
 
 	err := sectionAppender(sections, parentFilename, targetSection)
 	if err.Error() != "parent section not found" {
