@@ -49,12 +49,12 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v -coverprofile=profile.cov ./...
+      run: go test -v -covermode=atomic -coverprofile=coverage.out ./...
 
-    - name: Send coverage
-      uses: shogo82148/actions-goveralls@df920a6a2468668dfcf71a0b43817f89eaa5ea04 # v1.7.0
-      with:
-        path-to-profile: profile.cov
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # 3.1.4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   # Test Mac and Windows with the latest version of Go
   test-mac-windows:
