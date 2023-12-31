@@ -1402,6 +1402,10 @@ func TestAddSubSectionWithCustomFilename(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error adding subsection: %s", err)
 	}
+	testSection4Path, err := e.AddSubSection(testSection2Path, testSectionBody, testSectionTitle, "someNameWitAnyExtentionButnotxhtml.jpg", "")
+	if err != nil {
+		t.Errorf("Error adding subsection: %s", err)
+	}
 	_, err = e.AddSubSection(testSection2Path, testSectionBody, testSectionTitle, "someNameWithoutxhtml.xhtml", "")
 	if err.Error() != "Filename already used: someNameWithoutxhtml.xhtml" {
 		t.Errorf("you should not add same file twice : %s", err)
@@ -1417,6 +1421,9 @@ func TestAddSubSectionWithCustomFilename(t *testing.T) {
 	}
 	if testSection3Path != "someNameWithoutxhtml.xhtml" {
 		t.Errorf("Expected section3Path to be 'someNameWithoutxhtml.xhtml', got '%s'", testSection3Path)
+	}
+	if testSection4Path != "someNameWitAnyExtentionButnotxhtml.jpg.xhtml" {
+		t.Errorf("Expected section4Path to be 'someNameWitAnyExtentionButnotxhtml.jpg', got '%s'", testSection4Path)
 	}
 
 	cleanup(testEpubFilename, tempDir)
