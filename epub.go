@@ -355,7 +355,7 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 		// if internalFilename is not empty, check that it has .xhtml at the end.
 		// if it doesn't have add .xhtml at the end
 		// than if it is duplicate return error
-		if !strings.HasSuffix(internalFilename, ".xhtml") {
+		if filepath.Ext(internalFilename) != ".xhtml" {
 			internalFilename += ".xhtml"
 		}
 		if keyExists(filenamelist, internalFilename) {
