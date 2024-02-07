@@ -42,6 +42,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/flytam/filenamify"
 	"github.com/gofrs/uuid/v5"
 	"github.com/vincent-petithory/dataurl"
 )
@@ -626,7 +627,11 @@ func addMedia(client *http.Client, source string, internalFilename string, media
 	}
 	if internalFilename == "" {
 		// If a filename isn't provided, use the filename from the source
-		internalFilename = filepath.Base(source)
+		baseFilename := filepath.Base(source)
+		internalFilename, err = filenamify.Filenamify(baseFilename, filenamify.Options{Replacement: "-"})
+		if err != nil {
+			return "", fmt.Errorf("can't create an valid filename")
+		}
 		_, ok := mediaMap[internalFilename]
 		// if filename is too long, invalid or already used, try to generate a unique filename
 		if len(internalFilename) > 255 || !fs.ValidPath(internalFilename) || ok {

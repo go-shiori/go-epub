@@ -1015,9 +1015,15 @@ func TestEmbedImage(t *testing.T) {
 	testSectionBodyWithImage := `    <h1>Section 1</h1>
 	<p>This is a paragraph.</p>
 	<p><img src="` + server.URL + `/gophercolor16x16.png" loading="lazy"/></p>`
+	testSectionBodyWithImageUnvalidname := `    <h1>Section 1</h1>
+	<p>This is a paragraph.</p>
+	<p><img src="` + server.URL + `/gophercolor16x16.png?width=300" loading="lazy"/></p>`
 	testSectionBodyWithImageExpect := `    <h1>Section 1</h1>
 	<p>This is a paragraph.</p>
 	<p><img src="../images/gophercolor16x16.png" loading="lazy"/></p>`
+	testSectionBodyWithImageUnvalidnameExpect := `    <h1>Section 1</h1>
+	<p>This is a paragraph.</p>
+	<p><img src="../images/gophercolor16x16.png!width=300" loading="lazy"/></p>`
 	e, err := NewEpub(testEpubTitle)
 	if err != nil {
 		t.Error(err)
@@ -1033,6 +1039,10 @@ func TestEmbedImage(t *testing.T) {
 		t.Errorf("Error adding section: %s", err)
 	}
 	testSection3Path, err := e.AddSection(testSectionBodyWithImage, testSectionTitle, "", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
+	testSection4Path, err := e.AddSection(testSectionBodyWithImageUnvalidname, testSectionTitle, "", "")
 	if err != nil {
 		t.Errorf("Error adding section: %s", err)
 	}
@@ -1082,6 +1092,20 @@ func TestEmbedImage(t *testing.T) {
 				"Expected: %s",
 			contents,
 			testSection3Contents)
+	}
+	// test 4
+	contents, err = storage.ReadFile(filesystem, filepath.Join(tempDir, contentFolderName, xhtmlFolderName, testSection4Path))
+	if err != nil {
+		t.Errorf("Unexpected error reading section file: %s", err)
+	}
+	testSection4Contents := fmt.Sprintf(testSectionContentTemplate, testSectionTitle, testSectionBodyWithImageUnvalidnameExpect)
+	if trimAllSpace(string(contents)) != trimAllSpace(testSection4Contents) {
+		t.Errorf(
+			"Section file contents don't match\n"+
+				"Got: %s\n"+
+				"Expected: %s",
+			contents,
+			testSectionContents)
 	}
 	cleanup(testEpubFilename, tempDir)
 }
