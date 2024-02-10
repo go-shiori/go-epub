@@ -35,6 +35,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -42,7 +43,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/flytam/filenamify"
 	"github.com/gofrs/uuid/v5"
 	"github.com/vincent-petithory/dataurl"
 )
@@ -602,8 +602,14 @@ func (e *Epub) EmbedImages() {
 
 				firstSrcIndex := strings.Index(match[0], " src=")
 				match[0] = match[0][:firstSrcIndex+len(" src=")] + strings.ReplaceAll(match[0][firstSrcIndex+len(" src="):], " src=", " data-src=")
-
-				filePath, err := e.AddImage(string(imageURL), "")
+				parsedImageURL, err := url.Parse(imageURL)
+				if err != nil {
+					log.Printf("can't parse image URL: %s", err)
+					continue
+				}
+				extension := filepath.Ext(parsedImageURL.Path)
+				filename := fmt.Sprintf("image%04d%s", i+1, extension)
+				filePath, err := e.AddImage(string(imageURL), filename)
 				if err != nil {
 					log.Printf("can't add image to the epub: %s", err)
 					continue
@@ -627,11 +633,7 @@ func addMedia(client *http.Client, source string, internalFilename string, media
 	}
 	if internalFilename == "" {
 		// If a filename isn't provided, use the filename from the source
-		baseFilename := filepath.Base(source)
-		internalFilename, err = filenamify.Filenamify(baseFilename, filenamify.Options{Replacement: "-"})
-		if err != nil {
-			return "", fmt.Errorf("can't create an valid filename")
-		}
+		internalFilename = filepath.Base(source)
 		_, ok := mediaMap[internalFilename]
 		// if filename is too long, invalid or already used, try to generate a unique filename
 		if len(internalFilename) > 255 || !fs.ValidPath(internalFilename) || ok {
