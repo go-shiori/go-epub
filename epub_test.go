@@ -1042,6 +1042,10 @@ func TestEmbedImage(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error adding section: %s", err)
 	}
+	_, err = e.AddSection(testSectionBodyWithImage, testSectionTitle, "", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
 	testSection4Path, err := e.AddSection(testSectionBodyWithImageUnvalidname, testSectionTitle, "", "")
 	if err != nil {
 		t.Errorf("Error adding section: %s", err)

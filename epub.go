@@ -608,7 +608,7 @@ func (e *Epub) EmbedImages() {
 					continue
 				}
 				extension := filepath.Ext(parsedImageURL.Path)
-				filename := fmt.Sprintf("image%04d%s", i+1, extension)
+				filename := fmt.Sprintf("image%04d%s", len(e.images)+1, extension)
 				filePath, err := e.AddImage(string(imageURL), filename)
 				if err != nil {
 					log.Printf("can't add image to the epub: %s", err)
