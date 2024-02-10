@@ -34,6 +34,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
@@ -608,6 +609,20 @@ func (e *Epub) EmbedImages() {
 					continue
 				}
 				extension := filepath.Ext(parsedImageURL.Path)
+				if extension == "" {
+					res, err := http.Head(imageURL)
+					if err != nil {
+						log.Printf("can't get image headers: %s", err)
+					} else {
+						// Get extension from the file content type
+						extensions, err := mime.ExtensionsByType(res.Header.Get("Content-Type"))
+						if err != nil {
+							log.Printf("can't get file type from content type: %s", err)
+						} else if len(extensions) > 0 {
+							extension = extensions[0]
+						}
+					}
+				}
 				filename := fmt.Sprintf("image%04d%s", len(e.images)+1, extension)
 				filePath, err := e.AddImage(string(imageURL), filename)
 				if err != nil {
