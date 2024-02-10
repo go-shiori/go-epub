@@ -1020,10 +1020,10 @@ func TestEmbedImage(t *testing.T) {
 	<p><img src="` + server.URL + `/gophercolor16x16.png?width=300" loading="lazy"/></p>`
 	testSectionBodyWithImageExpect := `    <h1>Section 1</h1>
 	<p>This is a paragraph.</p>
-	<p><img src="../images/image0003.png" loading="lazy"/></p>`
+	<p><img src="../images/image0001.png" loading="lazy"/></p>`
 	testSectionBodyWithImageUnvalidnameExpect := `    <h1>Section 1</h1>
 	<p>This is a paragraph.</p>
-	<p><img src="../images/image0004.png" loading="lazy"/></p>`
+	<p><img src="../images/image0003.png" loading="lazy"/></p>`
 	e, err := NewEpub(testEpubTitle)
 	if err != nil {
 		t.Error(err)
