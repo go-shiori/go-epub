@@ -1018,12 +1018,18 @@ func TestEmbedImage(t *testing.T) {
 	testSectionBodyWithImageUnvalidname := `    <h1>Section 1</h1>
 	<p>This is a paragraph.</p>
 	<p><img src="` + server.URL + `/gophercolor16x16.png?width=300" loading="lazy"/></p>`
+	testSectionBodyWithImageWithoutExtention := `    <h1>Section 1</h1>
+	<p>This is a paragraph.</p>
+	<p><img src="` + server.URL + `/gophercolor16x16withoutextention" loading="lazy"/></p>`
 	testSectionBodyWithImageExpect := `    <h1>Section 1</h1>
 	<p>This is a paragraph.</p>
 	<p><img src="../images/image0001.png" loading="lazy"/></p>`
 	testSectionBodyWithImageUnvalidnameExpect := `    <h1>Section 1</h1>
 	<p>This is a paragraph.</p>
 	<p><img src="../images/image0003.png" loading="lazy"/></p>`
+	testSectionBodyWithImageWithoutExtentionExpected := `    <h1>Section 1</h1>
+	<p>This is a paragraph.</p>
+	<p><img src="../images/image0004.png" loading="lazy"/></p>`
 	e, err := NewEpub(testEpubTitle)
 	if err != nil {
 		t.Error(err)
@@ -1047,6 +1053,10 @@ func TestEmbedImage(t *testing.T) {
 		t.Errorf("Error adding section: %s", err)
 	}
 	testSection4Path, err := e.AddSection(testSectionBodyWithImageUnvalidname, testSectionTitle, "", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
+	testSection5Path, err := e.AddSection(testSectionBodyWithImageWithoutExtention, testSectionTitle, "", "")
 	if err != nil {
 		t.Errorf("Error adding section: %s", err)
 	}
@@ -1109,7 +1119,21 @@ func TestEmbedImage(t *testing.T) {
 				"Got: %s\n"+
 				"Expected: %s",
 			contents,
-			testSectionContents)
+			testSection4Contents)
+	}
+	// test 5
+	contents, err = storage.ReadFile(filesystem, filepath.Join(tempDir, contentFolderName, xhtmlFolderName, testSection5Path))
+	if err != nil {
+		t.Errorf("Unexpected error reading section file: %s", err)
+	}
+	testSection5Contents := fmt.Sprintf(testSectionContentTemplate, testSectionTitle, testSectionBodyWithImageWithoutExtentionExpected)
+	if trimAllSpace(string(contents)) != trimAllSpace(testSection5Contents) {
+		t.Errorf(
+			"Section file contents don't match\n"+
+				"Got: %s\n"+
+				"Expected: %s",
+			contents,
+			testSection5Contents)
 	}
 	cleanup(testEpubFilename, tempDir)
 }
