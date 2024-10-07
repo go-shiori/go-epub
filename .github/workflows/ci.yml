@@ -21,7 +21,7 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 #v6.0.1
+        uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8 #v6.1.1
         with:
           version: latest
           only-new-issues: true
@@ -52,7 +52,7 @@ jobs:
       run: go test -v -covermode=atomic -coverprofile=coverage.out ./...
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # 4.5.0
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # 4.6.0
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
