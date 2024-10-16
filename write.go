@@ -485,7 +485,7 @@ func writeSections(rootEpubDir string, e *Epub, sections []*epubSection, parentf
 		if section.filename != e.cover.xhtmlFilename {
 			e.pkg.addToSpine(section.filename)
 		}
-		e.pkg.addToManifest(section.filename, relativePath, mediaTypeXhtml, "")
+		e.pkg.addToManifest(section.filename, relativePath, mediaTypeXhtml, section.properties)
 		if parentfilename[section.filename] == "-1" && section.filename != e.cover.xhtmlFilename {
 			j := filenamelist[section.filename]
 			e.toc.addSubSection("-1", j, section.xhtml.Title(), relativePath)
