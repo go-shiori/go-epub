@@ -58,7 +58,7 @@ func (e *FilenameAlreadyUsedError) Error() string {
 	return fmt.Sprintf("Filename already used: %s", e.Filename)
 }
 
-// FileRetrievalError is thrown by AddCSS, AddFont, AddImage, or Write if there was a
+// FileRetrievalError is thrown by AddCSS, AddFont, AddImage, AddMetaINF, or Write if there was a
 // problem retrieving the source file that was provided.
 type FileRetrievalError struct {
 	Source string // The source of the file whose retrieval failed
@@ -77,6 +77,15 @@ type ParentDoesNotExistError struct {
 
 func (e *ParentDoesNotExistError) Error() string {
 	return fmt.Sprintf("Parent with the internal filename %s does not exist", e.Filename)
+}
+
+// FilenameExtensionError is thrown by AddMetaINF if the filename extension isn't xml
+type FilenameExtensionError struct {
+	Filename string // Filename that caused the error
+}
+
+func (e *FilenameExtensionError) Error() string {
+	return fmt.Sprintf("filename extension isn't xml: %s", e.Filename)
 }
 
 // Folder names used for resources inside the EPUB
@@ -134,6 +143,8 @@ type Epub struct {
 	videos map[string]string
 	// The key is the audio filename, the value is the audio source
 	audios map[string]string
+	// The key is the config filename, the value is the config source
+	configs map[string]string
 	// Language
 	lang string
 	// Description
@@ -177,6 +188,7 @@ func NewEpub(title string) (*Epub, error) {
 	e.images = make(map[string]string)
 	e.videos = make(map[string]string)
 	e.audios = make(map[string]string)
+	e.configs = make(map[string]string)
 	e.pkg, err = newPackage()
 	if err != nil {
 		return nil, fmt.Errorf("can't create NewEpub: %w", err)
@@ -671,6 +683,38 @@ func addMedia(client *http.Client, source string, internalFilename string, media
 		mediaFolderName,
 		internalFilename,
 	), nil
+}
+
+// AddMetaINF add a config file to the META-INF
+// It can add OPTIONAL config file to the META-INF directory exclude container.xml
+// Spec: https://www.w3.org/TR/epub-33/#sec-container-metainf
+func (e *Epub) AddMetaINF(source string) error {
+	// check if the file name extension is xml or the filename is equal to containerFilename
+	filename := filepath.Base(source)
+	if filepath.Ext(filename) != ".xml" {
+		return &FilenameExtensionError{Filename: filename}
+	}
+	if filename == containerFilename {
+		return &FilenameAlreadyUsedError{Filename: filename}
+	}
+
+	e.Lock()
+	defer e.Unlock()
+
+	err := grabber{e.Client}.checkMedia(source)
+	if err != nil {
+		return &FileRetrievalError{
+			Source: source,
+			Err:    err,
+		}
+	}
+
+	if _, ok := e.configs[filename]; ok {
+		return &FilenameAlreadyUsedError{Filename: filename}
+	}
+
+	e.configs[filename] = source
+	return nil
 }
 
 // getFilenames returns a map of section filenames and index numbers within an ebook

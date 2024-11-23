@@ -211,3 +211,31 @@ func ExampleEpub_SetIdentifier() {
 	// Set the identifier to an ISBN
 	e.SetIdentifier("urn:isbn:9780101010101")
 }
+
+func ExampleEpub_AddMetaINF() {
+	fs := http.FileServer(http.Dir("./testdata/"))
+
+	// start a test server with the file server handler
+	server := httptest.NewServer(fs)
+	defer server.Close()
+
+	testImageFromURLSource := server.URL + "/encryption.xml"
+
+	var t *testing.T
+	e, err := epub.NewEpub("My title")
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Add a config from a local file
+	err = e.AddMetaINF("testdata/signatures.xml")
+	if err != nil {
+		log.Println(err)
+	}
+
+	// Add a config from a URL
+	err = e.AddMetaINF(testImageFromURLSource)
+	if err != nil {
+		log.Println(err)
+	}
+}

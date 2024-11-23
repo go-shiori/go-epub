@@ -67,6 +67,7 @@ const (
 	testVideoFromFileSource   = "testdata/sample_640x360.mp4"
 	testAudioFromFileFilename = "sample_audio.wav"
 	testAudioFromFileSource   = "testdata/sample_audio.wav"
+	testMetaInfFromFileSource = "testdata/signatures.xml"
 	testLangTemplate          = `<dc:language>%s</dc:language>`
 	testDescTemplate          = `<dc:description>%s</dc:description>`
 	testPpdTemplate           = `page-progression-direction="%s"`
@@ -447,6 +448,65 @@ func TestAddAudio(t *testing.T) {
 	}
 	if !bytes.Equal(contents, testAudioContents) {
 		t.Errorf("Audio file contents don't match")
+	}
+
+	cleanup(testEpubFilename, tempDir)
+}
+
+func TestAddMetaINF(t *testing.T) {
+	fs := http.FileServer(http.Dir("./testdata/"))
+
+	// start a test server with the file server handler
+	server := httptest.NewServer(fs)
+	defer server.Close()
+
+	testMetaInfFromURLSource := server.URL + "/encryption.xml"
+	e, err := NewEpub(testEpubTitle)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = e.AddMetaINF(testMetaInfFromFileSource)
+	if err != nil {
+		t.Errorf("Error adding config: %s", err)
+	}
+
+	err = e.AddMetaINF(testMetaInfFromURLSource)
+	if err != nil {
+		t.Errorf("Error adding config: %s", err)
+	}
+
+	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
+
+	// The image path is relative to the XHTML folder
+	contents, err := storage.ReadFile(filesystem, filepath.Join(tempDir, metaInfFolderName, "/signatures.xml"))
+	if err != nil {
+		t.Errorf("Unexpected error reading config file from EPUB: %s", err)
+	}
+
+	testConfigContents, err := os.ReadFile(testMetaInfFromFileSource)
+	if err != nil {
+		t.Errorf("Unexpected error reading testdata config file: %s", err)
+	}
+	if !bytes.Equal(contents, testConfigContents) {
+		t.Errorf("Config file contents don't match")
+	}
+
+	contents, err = storage.ReadFile(filesystem, filepath.Join(tempDir, metaInfFolderName, "/encryption.xml"))
+	if err != nil {
+		t.Errorf("Unexpected error reading config file from EPUB: %s", err)
+	}
+
+	resp, err := http.Get(testMetaInfFromURLSource)
+	if err != nil {
+		t.Errorf("Unexpected error response from test config URL: %s", err)
+	}
+	testConfigContents, err = io.ReadAll(resp.Body)
+	if err != nil {
+		t.Errorf("Unexpected error reading test config file from URL: %s", err)
+	}
+	if !bytes.Equal(contents, testConfigContents) {
+		t.Errorf("config file contents don't match")
 	}
 
 	cleanup(testEpubFilename, tempDir)
