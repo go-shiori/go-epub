@@ -2,3 +2,5 @@
 epubcheck*
 .DS_Store
 *.swp
+
+.idea/

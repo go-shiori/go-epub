@@ -82,7 +82,10 @@ func (e *Epub) WriteTo(dst io.Writer) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
+	err = e.writeMetaINFFile(tempDir)
+	if err != nil {
+		return 0, err
+	}
 	// Must be called after:
 	// createEpubFolders()
 	err = e.writeCSSFiles(tempDir)
@@ -208,6 +211,21 @@ func writeContainerFile(rootEpubDir string) error {
 		filePermissions,
 	); err != nil {
 		return fmt.Errorf("Error writing container file: %w", err)
+	}
+	return nil
+}
+
+// write the optional META-INF files, which include signatures.xml, encryption.xml,
+// metadata.xml,rights.xml, manifest.xml and so on
+func (e *Epub) writeMetaINFFile(rootEpubDir string) error {
+	if len(e.configs) > 0 {
+		metaInfFileDir := filepath.Join(rootEpubDir, metaInfFolderName)
+		for metaInfFilename, metaInfFileSource := range e.configs {
+			_, err := grabber{e.Client}.fetchMedia(metaInfFileSource, metaInfFileDir, metaInfFilename)
+			if err != nil {
+				return fmt.Errorf("unable to open file %s: %s", metaInfFileSource, err)
+			}
+		}
 	}
 	return nil
 }

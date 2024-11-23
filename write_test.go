@@ -2,6 +2,7 @@ package epub
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -59,27 +60,67 @@ func TestWriteToErrors(t *testing.T) {
 		}
 		testWriteToErrors(t, e, e.AddAudio, "sample_audio.wav")
 	})
+	t.Run("Config", func(t *testing.T) {
+		e, err := NewEpub(testEpubTitle)
+		if err != nil {
+			t.Error(err)
+		}
+		testWriteToConfig(t, e, e.AddMetaINF, "encryption.xml")
+	})
 }
 
-func testWriteToErrors(t *testing.T, e *Epub, adder func(string, string) (string, error), name string) {
-	// Copy testdata to temp file
-	data, err := os.Open(filepath.Join("testdata", name))
+// Copy testdata to temp file
+func copyTestData(name string) (temp *os.File, err error) {
+	var data *os.File
+	data, err = os.Open(filepath.Join("testdata", name))
 	if err != nil {
-		t.Fatalf("cannot open testdata: %v", err)
+		return nil, fmt.Errorf("cannot open testdata: %v", err)
 	}
 	defer data.Close()
-	temp, err := os.CreateTemp("", "temp")
+	temp, err = os.CreateTemp("", "temp")
 	if err != nil {
-		t.Fatalf("unable to create temp file: %v", err)
+		return nil, fmt.Errorf("unable to create temp file: %v", err)
 	}
 	_, err = io.Copy(temp, data)
 	if err != nil {
-		t.Fatalf("unable to copy tmp file to destination: %v", err)
+		temp.Close()
+		os.Remove(temp.Name())
+		return nil, fmt.Errorf("unable to copy tmp file to destination: %v", err)
 	}
 
 	temp.Close()
+	return
+}
+
+func testWriteToErrors(t *testing.T, e *Epub, adder func(string, string) (string, error), name string) {
+	temp, err := copyTestData(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Add temp file to epub
 	if _, err := adder(temp.Name(), ""); err != nil {
+		t.Fatalf("unable to add temp file: %v", err)
+	}
+	// Delete temp file
+	if err := os.Remove(temp.Name()); err != nil {
+		t.Fatalf("unable to delete temp file: %v", err)
+	}
+	// Write epub to buffer
+	var b bytes.Buffer
+	if _, err := e.WriteTo(&b); err == nil {
+		t.Fatal("Expected error")
+	}
+}
+
+func testWriteToConfig(t *testing.T, e *Epub, adder func(string) error, name string) {
+	temp, err := copyTestData(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Add temp file to epub
+	if err := adder(temp.Name()); err != nil {
 		t.Fatalf("unable to add temp file: %v", err)
 	}
 	// Delete temp file
