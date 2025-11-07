@@ -15,8 +15,8 @@ jobs:
   golangci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac #v4.0.0
-      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 #v5.0.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 #v6.0.0
         with:
           go-version-file: go.mod
           cache: false
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
-      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
 
     # This needs to come after the checkout, which wipes the working directory
     - name: Download EPUBCheck
@@ -41,7 +41,7 @@ jobs:
         unzip epubcheck-*.zip
 
     - name: Set up Go
-      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 #v6.0.0
       with:
         go-version-file: ./go.mod
 
@@ -65,10 +65,10 @@ jobs:
         os: [macos-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
 
     - name: Set up Go
-      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 #v6.0.0
       with:
         go-version-file: ./go.mod
 
