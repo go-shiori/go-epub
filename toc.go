@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"log"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -174,7 +175,7 @@ func (t *toc) addSubSection(parent string, index int, title string, relativePath
 		t.ncxXML.NavMap = append(t.ncxXML.NavMap, np)
 	} else {
 
-		parentRelativePath := filepath.Join(xhtmlFolderName, parent)
+		parentRelativePath := path.Join(xhtmlFolderName, parent)
 
 		l := &tocNavItem{
 			A: tocNavLink{

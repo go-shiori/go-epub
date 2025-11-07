@@ -1480,3 +1480,56 @@ func TestAddSubSectionWithCustomFilename(t *testing.T) {
 
 	cleanup(testEpubFilename, tempDir)
 }
+
+func TestSectionProperties(t *testing.T) {
+	e, err := NewEpub(testEpubTitle)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = e.AddSection("<h1>Section 1</h1>", "Section 1", "section0001.xhtml", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
+
+	_, err = e.AddSection("<h1>Section 2</h1><p><svg xmlns='http://www.w3.org/2000/svg'></svg></p>", "Section 2", "section0002.xhtml", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
+
+	_, err = e.AddSection("<h1>Section 3</h1><p><script></script></p>", "Section 3", "section0003.xhtml", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
+
+	_, err = e.AddSection(`<h1>Section 4</h1><form></form>`, "Section 4", "section0004.xhtml", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
+
+	_, err = e.AddSection("<h1>Section 5</h1><p><math xmlns='http://www.w3.org/1998/Math/MathML'></math></p>", "Section 5", "section0005.xhtml", "")
+	if err != nil {
+		t.Errorf("Error adding section: %s", err)
+	}
+
+	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
+
+	output, err := validateEpub(t, testEpubFilename)
+	if err != nil {
+		t.Errorf("EPUB validation failed")
+	}
+
+	// Always print the output so we can see warnings as well
+	if output != nil {
+		fmt.Println(string(output))
+	}
+	if doCleanup {
+		cleanup(testEpubFilename, tempDir)
+	} else {
+		// Always remove the files in tempDir; they can still be extracted from the test epub as needed
+		err := filesystem.RemoveAll(tempDir)
+		if err != nil {
+			log.Print("Error removing temp directory: %w", err)
+		}
+	}
+}

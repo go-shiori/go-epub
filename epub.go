@@ -31,6 +31,8 @@ Basic usage:
 package epub
 
 import (
+	"bytes"
+	"encoding/xml"
 	"fmt"
 	"io/fs"
 	"log"
@@ -156,9 +158,10 @@ type epubCover struct {
 }
 
 type epubSection struct {
-	filename string
-	xhtml    *xhtml
-	children []*epubSection
+	filename   string
+	xhtml      *xhtml
+	children   []*epubSection
+	properties string
 }
 
 // NewEpub returns a new Epub.
@@ -377,9 +380,10 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 	}
 
 	s := &epubSection{
-		filename: internalFilename,
-		xhtml:    x,
-		children: nil,
+		filename:   internalFilename,
+		xhtml:      x,
+		children:   nil,
+		properties: propertiesFromBody(body),
 	}
 
 	// section have parentIndex -1 and subsection have parrentindex != -1
@@ -395,6 +399,40 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 	}
 
 	return internalFilename, nil
+}
+
+// supports mathml, svg, scripted
+// does not support remote-sources, switch (deprecated)
+func propertiesFromBody(body string) string {
+	prop := map[string]bool{}
+
+	decoder := xml.NewDecoder(bytes.NewBufferString(body))
+	for {
+		t, _ := decoder.Token()
+		if t == nil {
+			break
+		}
+		switch se := t.(type) {
+		case xml.StartElement:
+			switch strings.ToUpper(se.Name.Local) {
+			case "SVG":
+				prop["svg"] = true
+			case "MATH":
+				if se.Name.Space == "http://www.w3.org/1998/Math/MathML" {
+					prop["mathml"] = true
+				}
+			case "SCRIPT", "FORM":
+				prop["scripted"] = true
+			}
+		default:
+		}
+	}
+
+	ret := []string{}
+	for k := range prop {
+		ret = append(ret, k)
+	}
+	return strings.Join(ret, " ")
 }
 
 // Author returns the author of the EPUB.
