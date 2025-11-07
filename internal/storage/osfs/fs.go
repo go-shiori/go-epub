@@ -23,6 +23,9 @@ func NewOSFS(rootDir string) *OSFS {
 }
 
 func (o *OSFS) WriteFile(name string, data []byte, perm fs.FileMode) error {
+	if err := os.MkdirAll(filepath.Join(o.rootDir, filepath.Dir(name)), os.ModePerm); err != nil {
+		return err
+	}
 	return os.WriteFile(filepath.Join(o.rootDir, name), data, perm)
 }
 
