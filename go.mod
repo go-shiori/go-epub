@@ -1,11 +1,11 @@
 module github.com/go-shiori/go-epub
 
-go 1.23.1
+go 1.25.4
 
 require (
-	github.com/gabriel-vasile/mimetype v1.4.5
-	github.com/gofrs/uuid/v5 v5.3.0
+	github.com/gabriel-vasile/mimetype v1.4.11
+	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/vincent-petithory/dataurl v1.0.0
 )
 
-require golang.org/x/net v0.27.0 // indirect
+require golang.org/x/net v0.46.0 // indirect
