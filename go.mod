@@ -7,5 +7,3 @@ require (
 	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/vincent-petithory/dataurl v1.0.0
 )
-
-require golang.org/x/net v0.46.0 // indirect
