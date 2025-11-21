@@ -275,9 +275,10 @@ func (t *toc) writeNcxDoc(tempDir string) error {
 
 // Append tocNcxNavPoint to parent children for toc in Epub v2
 func ncxAppender(t []*tocNcxNavPoint, parentFilename string, targetsection *tocNcxNavPoint) error {
+	p := filepath.ToSlash(parentFilename)
 	// Search for the epubSection with filename equal to parentFilename
 	for _, ncx := range t {
-		if ncx.Content.Src == parentFilename {
+		if ncx.Content.Src == p {
 			// Append targetsection as children of the found section
 			ncx.Children = append(ncx.Children, targetsection)
 			return nil
@@ -293,9 +294,10 @@ func ncxAppender(t []*tocNcxNavPoint, parentFilename string, targetsection *tocN
 
 // Append tocNavItem to parent children for toc in Epub v3
 func navAppender(t []*tocNavItem, parentFilename string, targetsection *tocNavItem) error {
+	p := filepath.ToSlash(parentFilename)
 	// Search for the epubSection with filename equal to parentFilename
 	for _, nav := range t {
-		if nav.A.Href == parentFilename {
+		if nav.A.Href == p {
 			// Append targetsection as children of the found section
 			nav.Children = append(nav.Children, targetsection)
 			return nil
