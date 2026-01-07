@@ -2,12 +2,12 @@
 [![Coverage Status](https://coveralls.io/repos/github/go-shiori/go-epub/badge.svg)](https://coveralls.io/github/go-shiori/go-epub)
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-shiori/go-epub)](https://goreportcard.com/report/github.com/go-shiori/go-epub)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/go-shiori/go-epub/blob/master/LICENSE)
-[![GoDoc](https://godoc.org/github.com/go-shiori/go-epub?status.svg)](https://godoc.org/github.com/go-shiori/go-epub)
+[![Go Reference](https://pkg.go.dev/badge/github.com/go-shiori/go-epub.svg)](https://pkg.go.dev/github.com/go-shiori/go-epub)
 
 ---
 
 ### Features
-- [Documented API](https://godoc.org/github.com/go-shiori/go-epub)
+- [Documented API](https://pkg.go.dev/github.com/go-shiori/go-epub)
 - Creates valid EPUB 3.0 files
 - Adds an additional EPUB 2.0 table of contents for maximum compatibility
 - Includes support for adding CSS, images, and fonts
