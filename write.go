@@ -51,6 +51,60 @@ const (
 	xhtmlFolderName   = "xhtml"
 )
 
+// writeContent writes all EPUB content to the specified root directory.
+// This is the core logic shared by WriteTo and WriteDirectory.
+func (e *Epub) writeContent(rootDir string) error {
+
+	// The order in which the file is assembled matters for some files.
+	// Containers, CSS, media, and sections can only be written after the
+	// necessary folders are created (createEPubFolders).
+	// The TOC must be written after all sections have been written.
+	// The package file is the final file to be written.
+	err := writeMimetype(rootDir)
+	if err != nil {
+		return err
+	}
+	err = createEpubFolders(rootDir)
+	if err != nil {
+		return err
+	}
+
+	err = writeContainerFile(rootDir)
+	if err != nil {
+		return err
+	}
+
+	err = e.writeCSSFiles(rootDir)
+	if err != nil {
+		return err
+	}
+
+	err = e.writeFonts(rootDir)
+	if err != nil {
+		return err
+	}
+
+	err = e.writeImages(rootDir)
+	if err != nil {
+		return err
+	}
+
+	err = e.writeVideos(rootDir)
+	if err != nil {
+		return err
+	}
+
+	err = e.writeAudios(rootDir)
+	if err != nil {
+		return err
+	}
+
+	e.writeSections(rootDir)
+	e.writeToc(rootDir)
+	e.writePackageFile(rootDir)
+	return nil
+}
+
 // WriteTo the dest io.Writer. The return value is the number of bytes written. Any error encountered during the write is also returned.
 func (e *Epub) WriteTo(dst io.Writer) (int64, error) {
 	e.Lock()
@@ -67,77 +121,43 @@ func (e *Epub) WriteTo(dst io.Writer) (int64, error) {
 			log.Print("Error removing temp directory: %w", err)
 		}
 	}()
-	err = writeMimetype(tempDir)
-	if err != nil {
-		return 0, err
-	}
-	err = createEpubFolders(tempDir)
-	if err != nil {
-		return 0, err
-	}
 
-	// Must be called after:
-	// createEpubFolders()
-	err = writeContainerFile(tempDir)
+	err = e.writeContent(tempDir)
 	if err != nil {
 		return 0, err
 	}
 
-	// Must be called after:
-	// createEpubFolders()
-	err = e.writeCSSFiles(tempDir)
-	if err != nil {
-		return 0, err
-	}
-
-	// Must be called after:
-	// createEpubFolders()
-	err = e.writeFonts(tempDir)
-	if err != nil {
-		return 0, err
-	}
-
-	// Must be called after:
-	// createEpubFolders()
-	err = e.writeImages(tempDir)
-	if err != nil {
-		return 0, err
-	}
-
-	// Must be called after:
-	// createEpubFolders()
-	err = e.writeVideos(tempDir)
-	if err != nil {
-		return 0, err
-	}
-
-	// Must be called after:
-	// createEpubFolders()
-	err = e.writeAudios(tempDir)
-	if err != nil {
-		return 0, err
-	}
-
-	// Must be called after:
-	// createEpubFolders()
-	e.writeSections(tempDir)
-
-	// Must be called after:
-	// createEpubFolders()
-	// writeSections()
-	e.writeToc(tempDir)
-
-	// Must be called after:
-	// createEpubFolders()
-	// writeCSSFiles()
-	// writeImages()
-	// writeVideos()
-	// writeAudios()
-	// writeSections()
-	// writeToc()
-	e.writePackageFile(tempDir)
-	// Must be called last
 	return e.writeEpub(tempDir, dst)
+}
+
+// WriteDirectory writes the EPUB as an exploded directory structure for inspection,
+// manual modification, and debugging. The destDir must be a path to a directory
+// (which will be created if it doesn't exist).
+func (e *Epub) WriteDirectory(destDir string) error {
+	e.Lock()
+	defer e.Unlock()
+
+	// Create a temp directory using the existing filesystem abstraction (like WriteTo does)
+	tempDir := uuid.Must(uuid.NewV4()).String()
+
+	err := filesystem.Mkdir(tempDir, dirPermissions)
+	if err != nil {
+		return fmt.Errorf("Error creating temp directory: %w", err)
+	}
+	defer func() {
+		if err := filesystem.RemoveAll(tempDir); err != nil {
+			log.Print("Error removing temp directory: %w", err)
+		}
+	}()
+
+	// Write EPUB content to temp directory using the existing abstraction
+	err = e.writeContent(tempDir)
+	if err != nil {
+		return err
+	}
+
+	// Copy the assembled temp directory to the destination directory
+	return copyDirectory(tempDir, destDir)
 }
 
 // Write writes the EPUB file. The destination path must be the full path to
@@ -155,6 +175,55 @@ func (e *Epub) Write(destFilePath string) error {
 	defer f.Close()
 	_, err = e.WriteTo(f)
 	return err
+}
+
+// copyDirectory recursively copies a directory from the filesystem abstraction to the OS filesystem.
+func copyDirectory(srcDir, destDir string) error {
+	// Create destination directory
+	err := os.MkdirAll(destDir, dirPermissions)
+	if err != nil {
+		return fmt.Errorf("Error creating destination directory: %w", err)
+	}
+
+	// Walk the source directory and copy all files
+	return fs.WalkDir(filesystem, srcDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Get relative path from source root
+		relPath, err := filepath.Rel(srcDir, path)
+		if err != nil {
+			return err
+		}
+
+		destPath := filepath.Join(destDir, relPath)
+
+		if d.IsDir() {
+			// Create directory in destination
+			return os.MkdirAll(destPath, dirPermissions)
+		}
+
+		// Copy file
+		srcFile, err := filesystem.Open(path)
+		if err != nil {
+			return fmt.Errorf("Error opening source file %s: %w", path, err)
+		}
+		defer srcFile.Close()
+
+		destFile, err := os.Create(destPath)
+		if err != nil {
+			return fmt.Errorf("Error creating destination file %s: %w", destPath, err)
+		}
+		defer destFile.Close()
+
+		_, err = io.Copy(destFile, srcFile)
+		if err != nil {
+			return fmt.Errorf("Error copying file %s: %w", path, err)
+		}
+
+		return nil
+	})
 }
 
 // Create the EPUB folder structure in a temp directory
@@ -237,6 +306,144 @@ func (wc *writeCounter) Write(p []byte) (int, error) {
 	n := len(p)
 	wc.Total += int64(n)
 	return n, nil
+}
+
+// AssembleDirectory assembles an exploded EPUB directory into a zipped EPUB file.
+// The sourceDir must be a path to a directory containing a valid exploded EPUB structure
+// (with mimetype, META-INF/container.xml, and EPUB/ folders).
+// The destFilePath must be the full path to the resulting EPUB file, including filename and extension.
+func AssembleDirectory(sourceDir, destFilePath string) error {
+	// Verify the source directory exists
+	info, err := os.Stat(sourceDir)
+	if err != nil {
+		return fmt.Errorf("Error accessing source directory: %w", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("Source path is not a directory: %s", sourceDir)
+	}
+
+	// Verify required files/folders exist
+	mimetypePath := filepath.Join(sourceDir, mimetypeFilename)
+	if _, err := os.Stat(mimetypePath); os.IsNotExist(err) {
+		return fmt.Errorf("Invalid EPUB directory: missing mimetype file")
+	}
+
+	containerPath := filepath.Join(sourceDir, metaInfFolderName, containerFilename)
+	if _, err := os.Stat(containerPath); os.IsNotExist(err) {
+		return fmt.Errorf("Invalid EPUB directory: missing META-INF/container.xml")
+	}
+
+	// Create the destination EPUB file
+	f, err := os.Create(destFilePath)
+	if err != nil {
+		return &UnableToCreateEpubError{
+			Path: destFilePath,
+			Err:  err,
+		}
+	}
+	defer f.Close()
+
+	// Use the writeEpubFromDirectory helper to zip the directory
+	_, err = writeEpubFromDirectory(sourceDir, f)
+	return err
+}
+
+// writeEpubFromDirectory is a helper that zips an exploded EPUB directory to an io.Writer.
+// It's similar to writeEpub but works with an existing directory instead of a temp directory.
+func writeEpubFromDirectory(rootEpubDir string, dst io.Writer) (int64, error) {
+	counter := &writeCounter{}
+	teeWriter := io.MultiWriter(counter, dst)
+
+	z := zip.NewWriter(teeWriter)
+
+	skipMimetypeFile := false
+
+	// addFileToZip adds the file present at path to the zip archive
+	addFileToZip := func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Get the path of the file relative to the folder we're zipping
+		relativePath, err := filepath.Rel(rootEpubDir, path)
+		if err != nil {
+			return err
+		}
+		relativePath = filepath.ToSlash(relativePath)
+
+		// Only include regular files, not directories
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+
+		var w io.Writer
+		if filepath.FromSlash(path) == filepath.Join(rootEpubDir, mimetypeFilename) {
+			// Skip the mimetype file if it's already been written
+			if skipMimetypeFile {
+				return nil
+			}
+			// The mimetype file must be uncompressed according to the EPUB spec
+			w, err = z.CreateHeader(&zip.FileHeader{
+				Name:   relativePath,
+				Method: zip.Store,
+			})
+		} else {
+			w, err = z.Create(relativePath)
+		}
+		if err != nil {
+			return fmt.Errorf("error creating zip writer: %w", err)
+		}
+
+		r, err := os.Open(path)
+		if err != nil {
+			return fmt.Errorf("error opening file %v being added to EPUB: %w", path, err)
+		}
+		defer func() {
+			if err := r.Close(); err != nil {
+				log.Println(err)
+			}
+		}()
+
+		_, err = io.Copy(w, r)
+		if err != nil {
+			return fmt.Errorf("error copying contents of file being added EPUB: %w", err)
+		}
+		return nil
+	}
+
+	// Add the mimetype file first
+	mimetypeFilePath := filepath.Join(rootEpubDir, mimetypeFilename)
+	mimetypeInfo, err := os.Stat(mimetypeFilePath)
+	if err != nil {
+		if err := z.Close(); err != nil {
+			log.Println(err)
+		}
+		return counter.Total, fmt.Errorf("unable to get FileInfo for mimetype file: %w", err)
+	}
+	err = addFileToZip(mimetypeFilePath, fileInfoToDirEntry(mimetypeInfo), nil)
+	if err != nil {
+		if err := z.Close(); err != nil {
+			log.Println(err)
+		}
+		return counter.Total, fmt.Errorf("unable to add mimetype file to EPUB: %w", err)
+	}
+
+	skipMimetypeFile = true
+
+	err = filepath.WalkDir(rootEpubDir, addFileToZip)
+	if err != nil {
+		if err := z.Close(); err != nil {
+			log.Println(err)
+		}
+		return counter.Total, fmt.Errorf("unable to add file to EPUB: %w", err)
+	}
+
+	err = z.Close()
+	return counter.Total, err
 }
 
 // Write the EPUB file itself by zipping up everything from a temp directory
@@ -439,7 +646,7 @@ func (e *Epub) writeSections(rootEpubDir string) {
 }
 
 // Write the TOC file to the temporary directory and add the TOC entries to the
-// package file
+// package file. All `writeSections` calls must be done before this.
 func (e *Epub) writeToc(rootEpubDir string) {
 	e.pkg.addToManifest(tocNavItemID, tocNavFilename, mediaTypeXhtml, tocNavItemProperties)
 	e.pkg.addToManifest(tocNcxItemID, tocNcxFilename, mediaTypeNcx, "")
