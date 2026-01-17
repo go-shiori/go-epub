@@ -51,16 +51,43 @@ const (
 	xhtmlFolderName   = "xhtml"
 )
 
+// resetWriteState resets the TOC and package manifest/spine so that
+// the Epub can be written multiple times without accumulating duplicate entries
+func (e *Epub) resetWriteState() error {
+	// Reinitialize the TOC to clear any previous entries
+	var err error
+	e.toc, err = newToc()
+	if err != nil {
+		return fmt.Errorf("error resetting TOC: %w", err)
+	}
+	e.toc.setTitle(e.Title())
+	e.toc.setIdentifier(e.Identifier())
+
+	// Clear the manifest and spine from the package
+	// Keep metadata but reset the file lists
+	e.pkg.xml.ManifestItems = nil
+	e.pkg.xml.Spine.Items = nil
+
+	return nil
+}
+
 // writeContent writes all EPUB content to the specified root directory.
 // This is the core logic shared by WriteTo and WriteDirectory.
 func (e *Epub) writeContent(rootDir string) error {
+	// Reset TOC and package manifest/spine for multiple writes
+	// This ensures that calling Write/WriteDirectory multiple times on the same
+	// Epub instance doesn't accumulate duplicate entries
+	err := e.resetWriteState()
+	if err != nil {
+		return err
+	}
 
 	// The order in which the file is assembled matters for some files.
 	// Containers, CSS, media, and sections can only be written after the
 	// necessary folders are created (createEPubFolders).
 	// The TOC must be written after all sections have been written.
 	// The package file is the final file to be written.
-	err := writeMimetype(rootDir)
+	err = writeMimetype(rootDir)
 	if err != nil {
 		return err
 	}

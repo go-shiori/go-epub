@@ -1,7 +1,9 @@
 package epub
 
 import (
+	"archive/zip"
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -238,7 +240,12 @@ func TestRoundTripDirectoryToZip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tempDir := t.TempDir()
+	//tempDir := t.TempDir()
+
+	tempDir, err := os.MkdirTemp("", "test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Write as directory
 	epubDir := filepath.Join(tempDir, "test-epub")
@@ -261,25 +268,73 @@ func TestRoundTripDirectoryToZip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Both files should exist and have reasonable sizes
-	info1, err := os.Stat(epubFile)
+	// Both files should be identical in content
+	// Compare zip file contents rather than raw bytes because
+	// timestamps and compression details may vary slightly
+	err = compareEpubFiles(epubFile, epubFile2)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	info2, err := os.Stat(epubFile2)
+
+}
+
+// compareEpubFiles compares two EPUB files by extracting and comparing their contents
+func compareEpubFiles(file1, file2 string) error {
+	z1, err := zip.OpenReader(file1)
 	if err != nil {
-		t.Fatal(err)
+		return fmt.Errorf("error opening %s: %w", file1, err)
+	}
+	defer z1.Close()
+
+	z2, err := zip.OpenReader(file2)
+	if err != nil {
+		return fmt.Errorf("error opening %s: %w", file2, err)
+	}
+	defer z2.Close()
+
+	if len(z1.File) != len(z2.File) {
+		return fmt.Errorf("different number of files: %d vs %d", len(z1.File), len(z2.File))
 	}
 
-	if info1.Size() == 0 {
-		t.Error("Assembled EPUB is empty")
-	}
-	if info2.Size() == 0 {
-		t.Error("Direct write EPUB is empty")
+	// Create maps of filename -> content for both zips
+	files1 := make(map[string][]byte)
+	for _, f := range z1.File {
+		rc, err := f.Open()
+		if err != nil {
+			return fmt.Errorf("error opening %s in first zip: %w", f.Name, err)
+		}
+		content, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			return fmt.Errorf("error reading %s in first zip: %w", f.Name, err)
+		}
+		files1[f.Name] = content
 	}
 
-	if info1.Size() != info2.Size() {
-		t.Logf("Assembled EPUB size: %d, Direct write EPUB size: %d", info1.Size(), info2.Size())
+	files2 := make(map[string][]byte)
+	for _, f := range z2.File {
+		rc, err := f.Open()
+		if err != nil {
+			return fmt.Errorf("error opening %s in second zip: %w", f.Name, err)
+		}
+		content, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			return fmt.Errorf("error reading %s in second zip: %w", f.Name, err)
+		}
+		files2[f.Name] = content
 	}
 
+	// Compare file contents
+	for name, content1 := range files1 {
+		content2, ok := files2[name]
+		if !ok {
+			return fmt.Errorf("file %s exists in first epub but not in second", name)
+		}
+		if !bytes.Equal(content1, content2) {
+			return fmt.Errorf("file %s has different content: %d bytes vs %d bytes", name, len(content1), len(content2))
+		}
+	}
+
+	return nil
 }
