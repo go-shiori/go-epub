@@ -11,6 +11,8 @@
 - Creates valid EPUB 3.0 files
 - Adds an additional EPUB 2.0 table of contents for maximum compatibility
 - Includes support for adding CSS, images, and fonts
+- Supports writing exploded EPUB directories for inspection and manual modification
+- Can assemble exploded EPUB directories back into zipped EPUB files
 
 ### Contributions
 
